@@ -1,0 +1,33 @@
+<html>
+<title>flask_web</title>
+<body>
+	{#在jinja2模板中如此注释!#} hell, {{id}}!
+	<br>
+
+	{#变量的引用：叫变量代码块#} {#dict、list相关数据类型在jinja2模板中取值与pyhton原数据类型使用方法无异，甚至使用索引取值，例如list：lis.1,意为取列表索引1的值#}
+
+	{{dic.get("name")}} {{dic["name"]}} {{dic.name}}
+
+	<hr>
+	{#如果加入if条件：控制代码块，使用%%表示#} {% for i in dic.keys() %} {{i | upper}}
+	<br>
+	{% endfor%}
+
+	<hr>
+	打印lis元素大于3的元素：
+	<br>
+	{% for i in lis %} {% if i>3 %} {{i}}
+	<br>
+	{% endif %} {% endfor %}
+
+	<hr>
+	{# 过滤器的演示:支持函数的使用 #} {{ dic.keys() | upper}} {#过滤器支持链式调用|upper | reverse，执行顺序：依次往后#}
+
+	<hr>
+
+	{% for i in dic.keys() %} {{i | upper |reverse}}
+	<br>
+	{% endfor%}
+
+</body>
+</html>

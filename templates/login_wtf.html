@@ -1,0 +1,17 @@
+<html>
+<link rel="stylesheet" type="text/css" href="{{url_for('static',filename='site.css')}}">
+<title>登录</title>
+<body>
+<div style="width:100%;text-align:center">
+<form method="post">
+	{{form.csrf_token()}}
+	{{form.username.label}}{{form.username}}<br>
+	{{form.password.label}}{{form.password}}<br>
+	{{form.submit}}<br>
+	{% for message in get_flashed_messages() %}
+	{{message}}
+	{% endfor %}
+</form>
+</div>
+</body>
+</html>

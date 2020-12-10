@@ -1,0 +1,9 @@
+<html>
+<title>注册成功</title>
+<body>
+	恭喜{{username}},{{message}}成功！ 
+	{% if message != '登录' %}
+	<a href="{{url_for('login_wtf')}}">登录</a>
+	{% endif %}
+</body>
+</html>
