@@ -5,8 +5,12 @@ Created on 2020年12月11日
 '''
 
 import hashlib
+
 from urllib import parse
+from urllib.parse import urlencode    # python3
 import urllib.request
+import requests
+
 import json
 import time
 from WechatPCAPI import WechatPCAPI
@@ -15,13 +19,13 @@ from queue import Queue
 import threading
 
 
-#腾讯智能闲聊接口
-#api接口的链接
-url_preffix='https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat'
-#因为接口相应参数有要求，一开始是=我是封装在模块里的，但为了大家方便，就整合到了一起
+# 腾讯智能闲聊接口
+# api接口的链接
+url_preffix = 'https://api.ai.qq.com/fcgi-bin/nlp/nlp_textchat'
+# 因为接口相应参数有要求，一开始是=我是封装在模块里的，但为了大家方便，就整合到了一起
 def setParams(array, key, value):
     array[key] = value
-#生成接口的sign签名信息方法，接口参数需要 可参考：https://ai.qq.com/doc/auth.shtml 
+# 生成接口的sign签名信息方法，接口参数需要 可参考：https://ai.qq.com/doc/auth.shtml 
 def genSignString(parser):
     uri_str = ''
     for key in sorted(parser.keys()):
@@ -33,6 +37,31 @@ def genSignString(parser):
     hash_md5 = hashlib.md5(sign_str.encode('utf-8'))
     return hash_md5.hexdigest().upper()
 
+with open("pcc.json", "r", encoding="utf-8") as pf:
+    dic = json.load(pf)
+
+# https://api.ip138.com/status/?token=eeec8efa42dac1351ce06ecc06adb16f 查询剩余天气查询次数
+def get_werther(city):
+    for key, value in dic.items():
+        if city in value:
+            params = urlencode({'code':"{}".format(key), 'type':'1'})
+            url = 'https://api.ip138.com/weather/?' + params
+            headers = {"token":"eeec8efa42dac1351ce06ecc06adb16f"}    # token为示例
+            content = requests.get(url=url, headers=headers).json()
+            text = "地点: " + content.get("province") + "，时间：" + content.get("data").get("time") + \
+            "，白天天气：" + content.get("data").get("dayWeather") + \
+            "，温度：" + content.get("data").get("dayTemp") + \
+            "，白天风力：" + content.get("data").get("dayWind") + \
+            "，夜晚天气：" + content.get("data").get("nightWeather") + \
+            "，夜晚温度：" + content.get("data").get("nightTemp") + \
+            "，夜晚风向：" + content.get("data").get("wind") + \
+            "，夜晚风力：" + content.get("data").get("nightWind") + \
+            "，实时天气：" + content.get("data").get("weather") + \
+            "，实时温度：" + content.get("data").get("temp") + \
+            "，实时风力：" + content.get("data").get("wind") + \
+            "，实时湿度：" + content.get("data").get("humidity") + \
+            "，PM2.5：" + content.get("data").get("pm25")
+            return text
 
 class AiPlat(object):
     def __init__(self, app_id, app_key):
@@ -41,7 +70,7 @@ class AiPlat(object):
         self.data = {}
         self.url_data = ''
         
-    #调用接口并返回内容
+    # 调用接口并返回内容
     def invoke(self, params):
         self.url_data = urllib.parse.urlencode(params).encode("utf-8")
         req = urllib.request.Request(self.url, self.url_data)
@@ -51,33 +80,31 @@ class AiPlat(object):
             dict_rsp = json.loads(str_rsp)
             return dict_rsp
         except Exception as e:
-            return {'ret': -1,"error":"{}".format(e)}
+            return {'ret':-1, "error":"{}".format(e)}
         
-        #此方法生成为api接口准备串接所需的请求参数
-    def Messagela(self,question):
+        # 此方法生成为api接口准备串接所需的请求参数
+    def Messagela(self, question):
         self.url = url_preffix
-        setParams(self.data, 'app_id', self.app_id)#应用标识
+        setParams(self.data, 'app_id', self.app_id)    # 应用标识
         setParams(self.data, 'app_key', self.app_key)   
-        setParams(self.data, 'time_stamp', int(time.time()))#时间戳
-        setParams(self.data, 'nonce_str', int(time.time()))#随机字符串
-        setParams(self.data, 'question', question)#聊天内容
-        setParams(self.data, 'session', '10000')#session
+        setParams(self.data, 'time_stamp', int(time.time()))    # 时间戳
+        setParams(self.data, 'nonce_str', int(time.time()))    # 随机字符串
+        setParams(self.data, 'question', question)    # 聊天内容
+        setParams(self.data, 'session', '10000')    # session
         sign_str = genSignString(self.data)
-        setParams(self.data, 'sign', sign_str)#签名
+        setParams(self.data, 'sign', sign_str)    # 签名
         return self.invoke(self.data)
 
 
 # 需要自己去https://ai.qq.com/product/nlpchat.shtml注册智能闲聊，获取app_id和app_key,且接入
 def getmessage(messageall):
         try:
-            Message=AiPlat('2160704725', 'reXx7TmLyZxBOv0C')
-            response=Message.Messagela(messageall)
+            Message = AiPlat('2160704725', 'reXx7TmLyZxBOv0C')
+            response = Message.Messagela(messageall)
             return response.get('data').get('answer')           
         except Exception as e :
             pass
             
-
-# 
 # for i in range(3):
 #     print(getmessage("去哪里吃饭"))
 
@@ -92,7 +119,7 @@ def on_message(message):
 
 # 消息处理示例 仅供参考
 def thread_handle_message(wx_inst):
-    i=0
+    i = 0
     while True:
         message = queue_recved_message.get()
         # 打印所有好友列表信息
@@ -100,7 +127,8 @@ def thread_handle_message(wx_inst):
         if 'msg' in message.get('type'):    # 这里是判断收到的是消息 不是别的响应
             # 获取收到谁的消息
             msg_content = message.get('data').get('msg')
-            rep_message=getmessage(msg_content)
+#             rep_message=getmessage(msg_content)
+            rep_message = get_werther(msg_content)
             
             from_who = message.get('data').get('from_wxid')
             
@@ -113,13 +141,15 @@ def thread_handle_message(wx_inst):
             send_or_recv = message.get('data').get('send_or_recv')
             
             if from_who and send_or_recv[0] == '0':    # 0是收到的消息 1是发出的 对于1不要再回复了 不然会无限循环回复
-                print("第{}句话:{}".format(i,msg_content))
+                print("第{}句话:{}".format(i, msg_content))
                 wx_inst.send_text(from_who, rep_message)
-                i+=1
+                i += 1
             
             # 收到群聊@我的消息，我就@回复她
             if from_chatroom_wxid and send_or_recv[0] == '0' and "@A是我" in msg_content:
                 wx_inst.send_text(to_user=from_chatroom_wxid, msg=rep_message, at_someone=from_member_wxid)
+                
+            
 
 def main():
     wx_inst = WechatPCAPI(on_message=on_message, log=logging)
@@ -132,7 +162,7 @@ def main():
 
     time.sleep(10)
 
-#主程序
+# 主程序
 # 使用热启动，不需要多次扫码
 # '''如启动失败，可将hotReload=True删掉，这是热启动，再次启动时无需在次扫码，具体情况自行考虑'''
 # itchat.auto_login(hotReload=True)#hotReload=True

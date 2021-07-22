@@ -18,17 +18,13 @@ def on_message(message):
     queue_recved_message.put(message)
 
 
-
-
 # 消息处理示例 仅供参考
 def thread_handle_message(wx_inst):
     while True:
         message = queue_recved_message.get()
         # 打印所有好友列表信息
 #         print(message)
-        
         if 'msg' in message.get('type'):    # 这里是判断收到的是消息 不是别的响应
-            
             # 获取收到谁的消息
             msg_content = message.get('data', {}).get('msg', '')
             from_who = message.get('data', {}).get('from_wxid', '')
